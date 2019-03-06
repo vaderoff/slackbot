@@ -91,13 +91,13 @@ def events_handler(company_id):
                     'name': user['name'],
                     'email': user['profile']['email'],
                     'avatar': {
-                        'image_original': user['profile'].get(['image_original']),
-                        'image_24': user['profile'].get(['image_24']),
-                        'image_32': user['profile'].get(['image_32']),
-                        'image_48': user['profile'].get(['image_48']),
-                        'image_72': user['profile'].get(['image_72']),
-                        'image_192': user['profile'].get(['image_192']),
-                        'image_512': user['profile'].get(['image_512']),
+                        'image_original': user['profile'].get('image_original'),
+                        'image_24': user['profile'].get('image_24'),
+                        'image_32': user['profile'].get('image_32'),
+                        'image_48': user['profile'].get('image_48'),
+                        'image_72': user['profile'].get('image_72'),
+                        'image_192': user['profile'].get('image_192'),
+                        'image_512': user['profile'].get('image_512'),
                     }
                 }
             },
