@@ -6,7 +6,7 @@ import requests
 
 app = Flask(__name__)
 app.config['APPLICATION_ROOT'] = '/slack'
-db = MongoClient().slackbot
+#db = MongoClient().slackbot
 
 
 slack_clients = {}
