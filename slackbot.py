@@ -47,7 +47,7 @@ def auth_handler(company_id):
         )
         if response.get('ok'):
             db.access_tokens.update_one(
-                {'team_id': response['team_id']}, 
+                {'company_id': company_id, 'team_id': response['team_id']}, 
                 {'$set': {'access_token': response['bot']['bot_access_token']}},
                 upsert=True
             )
