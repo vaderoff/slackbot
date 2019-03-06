@@ -5,8 +5,7 @@ import requests
 
 
 app = Flask(__name__)
-app.config['APPLICATION_ROOT'] = '/slack'
-#db = MongoClient().slackbot
+db = MongoClient().slackbot
 
 
 slack_clients = {}
@@ -23,13 +22,13 @@ def slack(company_id, team_id):
             return _client
 
 
-@app.route('/', methods=['POST'])
+@app.route('/slack', methods=['POST'])
 def index():
     print('#'*30, request.json, '#'*30, sep='\n')
     return ''
 
 
-@app.route('/auth/<company_id>', methods=['GET'])
+@app.route('/slack/auth/<company_id>', methods=['GET'])
 def auth_handler(company_id):
     code = request.args.get('code')
     if code and company_id:
@@ -55,7 +54,7 @@ def auth_handler(company_id):
     return 'Error'
 
 
-@app.route('/events/<company_id>', methods=['POST'])
+@app.route('/slack/events/<company_id>', methods=['POST'])
 def events_handler(company_id):
     if not request.content_type == 'application/json' or not company_id:
         return abort(406)
@@ -112,7 +111,7 @@ def events_handler(company_id):
     return ''
 
 
-@app.route('/generate_webhook', methods=['GET'])
+@app.route('/slack/generate_webhook', methods=['GET'])
 def generate_webhook():
     client_id = request.args.get('client_id')
     client_secret = request.args.get('client_secret')
@@ -134,7 +133,7 @@ def generate_webhook():
     return jsonify(ok=False, data={'error': 'Missing argument'})
 
 
-@app.route('/send', methods=['POST'])
+@app.route('/slack/send', methods=['POST'])
 def send():
     if not request.content_type == 'application/json':
         return jsonify(ok=False, data={'error': 'Invalid content-type'})
