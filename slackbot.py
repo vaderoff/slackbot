@@ -23,6 +23,12 @@ def slack(company_id, team_id):
             return _client
 
 
+@app.route('/', methods=['POST'])
+def index():
+    print('#'*30, request.json, '#'*30, sep='\n')
+    return ''
+
+
 @app.route('/auth/<company_id>', methods=['GET'])
 def auth_handler(company_id):
     code = request.args.get('code')
@@ -147,7 +153,6 @@ def send():
         return jsonify(ok=True, data={})
     
     return jsonify(ok=False, data={'error': 'Missing argument or company not found'})
-
 
 
 if __name__ == "__main__":
