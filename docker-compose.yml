@@ -1,0 +1,15 @@
+version: '3'
+services:
+  mongo:
+    image: mongo
+    restart: always
+  bot: 
+    build: .
+    command: python -u slackbot.py
+    volumes: 
+      - .:/bot
+    ports: 
+      - "8080:8080"
+    depends_on:
+      - mongo 
+    restart: always

@@ -1,18 +1,24 @@
 import requests
-from flask import Flask, abort, jsonify, request
+from flask import Flask, abort, jsonify, request, Blueprint
 from slackclient import SlackClient
 
 from bson.objectid import ObjectId
 from pymongo import MongoClient
 
-app = Flask(__name__)
+
+bp = Blueprint('slackbot', __name__)
 db = MongoClient().slackbot
 
 
+# SlackClient instances, one instance for one slack workspace
+# {'company_id': {'team_id': SlackClient()}}
 slack_clients = {}
 
 
 def slack(company_id, team_id):
+    '''
+    Returning SlackClient instance 
+    '''
     if slack_clients.get(company_id) and slack_clients[company_id].get(team_id):
         return slack_clients[company_id][team_id]
     else:
@@ -23,16 +29,16 @@ def slack(company_id, team_id):
             return _client
 
 
-@app.route('/slack', methods=['POST'])
+@bp.route('/', methods=['POST'])
 def index():
     print('#'*30, request.json, '#'*30, sep='\n')
     return ''
 
 
-@app.route('/slack/auth/<company_id>', methods=['GET'])
+@bp.route('/auth/<company_id>', methods=['GET'])
 def auth_handler(company_id):
     code = request.args.get('code')
-    if code and company_id:
+    if code:
 
         company = db.companies.find_one({'_id': ObjectId(company_id)})
         if not company:
@@ -55,9 +61,9 @@ def auth_handler(company_id):
     return 'Error'
 
 
-@app.route('/slack/events/<company_id>', methods=['POST'])
+@bp.route('/events/<company_id>', methods=['POST'])
 def events_handler(company_id):
-    if not request.content_type == 'application/json' or not company_id:
+    if not request.content_type == 'application/json':
         return abort(406)
 
 
@@ -112,7 +118,7 @@ def events_handler(company_id):
     return ''
 
 
-@app.route('/slack/generate_webhook', methods=['GET'])
+@bp.route('/generate_webhook', methods=['GET'])
 def generate_webhook():
     client_id = request.args.get('client_id')
     client_secret = request.args.get('client_secret')
@@ -134,7 +140,7 @@ def generate_webhook():
     return jsonify(ok=False, data={'error': 'Missing argument'})
 
 
-@app.route('/slack/send', methods=['POST'])
+@bp.route('/send', methods=['POST'])
 def send():
     if not request.content_type == 'application/json':
         return jsonify(ok=False, data={'error': 'Invalid content-type'})
@@ -156,4 +162,6 @@ def send():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5050)
+    app = Flask(__name__)
+    app.register_blueprint(bp, url_prefix='/slack')
+    app.run(debug=True, port=8080)
