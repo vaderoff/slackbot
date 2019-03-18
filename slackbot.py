@@ -68,10 +68,14 @@ def events_handler(company_id):
 
 
     company = db.companies.find_one({'_id': ObjectId(company_id)})
-    if not company:
+    access_token = db.access_tokens.find_one({'company_id': company_id, 'team_id': team_id})
+    if not company and not access_token:
         return abort(404)
 
     data = request.json
+
+    if data['event']['type'] != 'message':
+        return ''
 
     if data.get('type') == 'url_verification':
         db.companies.update_one(
@@ -79,7 +83,6 @@ def events_handler(company_id):
             {'$set': {'verification_token': data.get('token')}}
         )
         return data.get('challenge')
-
     if data.get('token') == company.get('verification_token') and data['event']['channel_type'] == 'im':
 
         workspace = slack(company_id, data['team_id']).api_call('team.info')['team']
