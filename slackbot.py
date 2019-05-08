@@ -66,13 +66,13 @@ def events_handler(company_id):
     if not request.content_type == 'application/json':
         return abort(406)
 
+    data = request.json
 
     company = db.companies.find_one({'_id': ObjectId(company_id)})
-    access_token = db.access_tokens.find_one({'company_id': company_id, 'team_id': team_id})
+    access_token = db.access_tokens.find_one({'company_id': company_id, 'team_id': data.get('team_id')})
     if not company and not access_token:
         return abort(404)
 
-    data = request.json
 
     if data.get('type') == 'url_verification':
         db.companies.update_one(
