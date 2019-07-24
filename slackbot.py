@@ -17,15 +17,16 @@ slack_clients = {}
 
 def slack(company_id, team_id):
     '''
-    Returning SlackClient instance 
+    return SlackClient instance 
     '''
     if slack_clients.get(company_id) and slack_clients[company_id].get(team_id):
         return slack_clients[company_id][team_id]
     else:
-        token = db.access_tokens.find_one({'company_id': company_id, 'team_id': team_id}).get('access_token')
+        token = db.access_tokens.find_one(
+            {'company_id': company_id, 'team_id': team_id}).get('access_token')
         if token:
             _client = SlackClient(token)
-            slack_clients.update({ company_id: {team_id: _client} })
+            slack_clients.update({company_id: {team_id: _client}})
             return _client
 
 
@@ -46,15 +47,16 @@ def auth_handler(company_id):
 
         slack = SlackClient('')
         response = slack.api_call(
-            'oauth.access', 
+            'oauth.access',
             code=code,
             client_id=company.get('client_id'),
             client_secret=company.get('client_secret')
         )
         if response.get('ok'):
             db.access_tokens.update_one(
-                {'company_id': company_id, 'team_id': response['team_id']}, 
-                {'$set': {'access_token': response['bot']['bot_access_token']}},
+                {'company_id': company_id, 'team_id': response['team_id']},
+                {'$set': {
+                    'access_token': response['bot']['bot_access_token']}},
                 upsert=True
             )
             return 'OK'
@@ -76,10 +78,11 @@ def events_handler(company_id):
             {'$set': {'verification_token': data.get('token')}}
         )
         return data.get('challenge')
-    
+
     data = request.json
 
-    access_token = db.access_tokens.find_one({'company_id': company_id, 'team_id': data.get('team_id')})
+    access_token = db.access_tokens.find_one(
+        {'company_id': company_id, 'team_id': data.get('team_id')})
     if not access_token:
         return abort(404)
 
@@ -88,8 +91,10 @@ def events_handler(company_id):
 
     if data.get('token') == company.get('verification_token') and data['event']['channel_type'] == 'im':
 
-        workspace = slack(company_id, data['team_id']).api_call('team.info')['team']
-        user = slack(company_id, data['team_id']).api_call('users.info', user=data['event']['user'])['user']
+        workspace = slack(company_id, data['team_id']).api_call(
+            'team.info')['team']
+        user = slack(company_id, data['team_id']).api_call(
+            'users.info', user=data['event']['user'])['user']
 
         _data = {
             'contact': {
@@ -97,7 +102,7 @@ def events_handler(company_id):
                     'id': data['team_id'],
                     'domain': workspace['domain'],
                     'channel': data['event']['channel']
-                }, 
+                },
                 'user': {
                     'id': data['event']['user'],
                     'name': user['name'],
@@ -139,10 +144,10 @@ def generate_webhook():
             'usedesk_id': company_id
         }).inserted_id
         return jsonify(ok=True, data={
-            'auth_webhook': '/slack/auth/{}'.format(company_id), 
+            'auth_webhook': '/slack/auth/{}'.format(company_id),
             'events_webhook': '/slack/events/{}'.format(company_id)
         })
-    
+
     return jsonify(ok=False, data={'error': 'Missing argument'})
 
 
@@ -150,7 +155,7 @@ def generate_webhook():
 def send():
     if not request.content_type == 'application/json':
         return jsonify(ok=False, data={'error': 'Invalid content-type'})
-    
+
     data = request.json
 
     usedesk_company_id = data.get('company_id')
@@ -159,11 +164,12 @@ def send():
     text = data.get('text')
 
     company = db.companies.find_one({'usedesk_id': usedesk_company_id})
-    
+
     if company and workspace_id and channel_id and text:
-        response = slack(str(company.get('_id')), workspace_id).api_call('chat.postMessage', channel=channel_id, text=text)
+        response = slack(str(company.get('_id')), workspace_id).api_call(
+            'chat.postMessage', channel=channel_id, text=text)
         return jsonify(ok=True, data={})
-    
+
     return jsonify(ok=False, data={'error': 'Missing argument or company not found'})
 
 
